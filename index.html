@@ -1,2323 +1,1925 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Arcane Puzzle Solver</title>
-
 <style>
-*{
-    box-sizing:border-box;
-    -webkit-tap-highlight-color:transparent;
+*{box-sizing:border-box}
+body{margin:0;background:#0b1020;color:#eef2ff;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+header{padding:18px 20px;background:#121a31;border-bottom:1px solid #26304d}
+h1{margin:0;font-size:22px}
+nav{display:flex;gap:8px;flex-wrap:wrap;padding:12px 20px;background:#0e1529;position:sticky;top:0;z-index:20}
+button,.file{background:#1b2644;color:#fff;border:1px solid #354365;border-radius:9px;padding:9px 12px;cursor:pointer}
+button:hover,.file:hover{background:#25345b}
+.danger{background:#482331}
+.primary{background:#31558f}
+main{max-width:1200px;margin:auto;padding:16px}
+.panel{background:#121a31;border:1px solid #293553;border-radius:14px;padding:16px;margin-bottom:16px}
+h2{font-size:17px;margin:0 0 12px}
+.muted{color:#9da9c6;font-size:13px}
+input[type=text],select{
+background:#0b1020;
+color:#fff;
+border:1px solid #354365;
+border-radius:8px;
+padding:9px
 }
-
-body{
-    margin:0;
-    background:#090b10;
-    color:#f4f5f7;
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+input[type=file]{display:none}
+.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+gap:10px
 }
-
-.app{
-    width:100%;
-    max-width:700px;
-    margin:auto;
-    padding:18px;
+.card{
+background:#0d1427;
+border:1px solid #293553;
+border-radius:10px;
+padding:10px
 }
-
-h1{
-    margin:0;
-    font-size:25px;
+.pill{
+display:inline-block;
+padding:4px 8px;
+border-radius:999px;
+background:#243153;
+font-size:12px
 }
-
-.sub{
-    color:#8e96a3;
-    margin-top:5px;
-    font-size:13px;
+#boardWrap{
+position:relative;
+display:inline-block;
+max-width:100%;
+overflow:auto;
+border:1px solid #354365;
+border-radius:10px;
+background:#050814
 }
-
-.panel{
-    background:#12151c;
-    border:1px solid #242a35;
-    border-radius:16px;
-    padding:15px;
-    margin-top:14px;
+#boardImg{
+display:block;
+max-width:min(100%,1000px);
+height:auto
 }
-
-input[type=file]{
-    width:100%;
-    padding:12px;
-    background:#1a1f28;
-    border-radius:10px;
-    color:white;
+.box{
+position:absolute;
+border:2px solid #6ee7b7;
+cursor:move;
+user-select:none
 }
-
-button{
-    border:0;
-    border-radius:10px;
-    padding:11px 14px;
-    font-weight:700;
-    cursor:pointer;
+.box.covered{border-color:#94a3b8}
+.box.unknown{border-color:#fbbf24}
+.box span{
+position:absolute;
+top:-23px;
+left:-2px;
+background:#111827;
+color:#fff;
+padding:2px 6px;
+border-radius:5px;
+font-size:12px;
+white-space:nowrap
 }
-
-.primary{
-    background:#e9edf3;
-    color:#111;
+.box button{
+position:absolute;
+right:-7px;
+top:-27px;
+padding:2px 6px;
+font-size:11px;
+background:#3b1721
 }
-
-.secondary{
-    background:#252b36;
-    color:#fff;
+table{
+width:100%;
+border-collapse:collapse
 }
-
-.danger{
-    background:#4a2024;
-    color:#fff;
+td,th{
+padding:7px;
+border-bottom:1px solid #27324d;
+text-align:left;
+font-size:13px
 }
-
-.action{
-    text-align:center;
-    font-size:28px;
-    font-weight:900;
-    letter-spacing:.4px;
-    padding:22px 8px;
+.storage{
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+min-height:55px;
+padding:8px;
+background:#090e1b;
+border-radius:10px
 }
-
-.status{
-    text-align:center;
-    color:#9da6b3;
-    font-size:13px;
-    margin-top:5px;
+.slot{
+width:58px;
+height:40px;
+border:1px dashed #465475;
+border-radius:7px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:11px;
+text-align:center;
+padding:3px
 }
-
-canvas{
-    width:100%;
-    height:auto;
-    display:block;
-    border-radius:14px;
-    background:#050609;
-    margin-top:14px;
+.slot.full{
+border-style:solid;
+background:#202d4c
 }
-
-.row{
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
+#move{
+font-size:28px;
+font-weight:800;
+text-align:center;
+padding:18px;
+background:#0a1425;
+border-radius:12px;
+margin-top:12px
 }
-
-.small{
-    font-size:12px;
-    color:#929ba8;
-}
-
-.learn{
-    display:none;
-}
-
-.learn input{
-    width:100%;
-    padding:11px;
-    margin:8px 0;
-    border-radius:9px;
-    border:1px solid #343b47;
-    background:#0c0f14;
-    color:white;
-}
-
-.stats{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:8px;
-    margin-top:12px;
-}
-
-.stat{
-    background:#0d1016;
-    border-radius:10px;
-    padding:10px;
-    text-align:center;
-}
-
-.stat b{
-    display:block;
-    font-size:20px;
-}
-
-.stat span{
-    color:#7f8895;
-    font-size:11px;
-}
-
-.hidden{
-    display:none!important;
-}
-
-.good{
-    color:#7ee787;
-}
-
-.warn{
-    color:#ffd166;
-}
-
-.bad{
-    color:#ff7b72;
-}
+#move.safe{color:#6ee7b7}
+#move.warn{color:#fbbf24}
+.small{font-size:12px}
+.hidden{display:none}
 </style>
 </head>
 
 <body>
 
-<div class="app">
+<header>
+<h1>🧠 Arcane Puzzle Solver</h1>
+</header>
 
-    <h1>Arcane Puzzle Solver</h1>
-    <div class="sub">
-        Screenshot → board recognition → safe move
-    </div>
+<nav>
+<button onclick="show('library')">🧠 TILE LIBRARY</button>
+<button onclick="show('board')">🎮 GAME BOARD</button>
+<button onclick="show('solve')">🧠 SOLVE</button>
+<button onclick="newGame()">NEW GAME</button>
+<button class="danger" onclick="resetLibrary()">RESET TILE LIBRARY</button>
+</nav>
 
-    <div class="panel">
+<main>
 
-        <input
-            id="fileInput"
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-        >
+<section id="library" class="panel">
 
-        <div id="action" class="action">
-            UPLOAD SCREENSHOT
-        </div>
+<h2>Tile Library</h2>
 
-        <div id="status" class="status">
-            Waiting for a board screenshot.
-        </div>
+<div class="muted">
+Build each artwork from multiple examples. Selectable and covered examples are stored separately.
+</div>
 
-        <canvas id="canvas"></canvas>
+<div class="row" style="margin-top:12px">
 
-        <div class="stats">
-            <div class="stat">
-                <b id="tileCount">0</b>
-                <span>VISIBLE TILES</span>
-            </div>
+<input
+id="tileName"
+type="text"
+placeholder="Tile name — e.g. Eyeball">
 
-            <div class="stat">
-                <b id="knownCount">0</b>
-                <span>KNOWN</span>
-            </div>
+<label class="file">
+Add selectable examples
+<input
+id="selFiles"
+type="file"
+accept="image/*"
+multiple>
+</label>
 
-            <div class="stat">
-                <b id="memoryCount">0</b>
-                <span>MEMORY</span>
-            </div>
-        </div>
+<label class="file">
+Add covered examples
+<input
+id="covFiles"
+type="file"
+accept="image/*"
+multiple>
+</label>
 
-    </div>
-
-    <div id="learnPanel" class="panel learn">
-
-        <b>NEW TILE DETECTED</b>
-
-        <div class="small">
-            Give this artwork a name. The solver will remember it on this device.
-        </div>
-
-        <input
-            id="tileName"
-            placeholder="Example: Eyeball"
-            autocomplete="off"
-        >
-
-        <div class="row">
-
-            <button
-                id="saveTile"
-                class="primary"
-            >
-                SAVE TILE
-            </button>
-
-            <button
-                id="skipTile"
-                class="secondary"
-            >
-                SKIP
-            </button>
-
-        </div>
-
-    </div>
-
-    <div class="panel">
-
-        <div class="row">
-
-            <button
-                id="resetMemory"
-                class="danger"
-            >
-                RESET MEMORY
-            </button>
-
-            <button
-                id="clearHistory"
-                class="secondary"
-            >
-                CLEAR HISTORY
-            </button>
-
-        </div>
-
-        <div class="small" style="margin-top:10px">
-            The solver learns tile artwork as you teach it and keeps its
-            memory in this browser.
-        </div>
-
-    </div>
+<button class="primary" onclick="saveTile()">
+SAVE / ADD EXAMPLES
+</button>
 
 </div>
 
+<div id="libList" class="grid" style="margin-top:14px"></div>
+
+</section>
+
+
+<section id="board" class="panel hidden">
+
+<h2>Game Board</h2>
+
+<div class="muted">
+Upload a screenshot. Auto-detection gives you a starting point; manual boxes and state/identity controls are authoritative.
+</div>
+
+<div class="row" style="margin:12px 0">
+
+<label class="file">
+UPLOAD BOARD SCREENSHOT
+<input
+id="boardFile"
+type="file"
+accept="image/*">
+</label>
+
+<button onclick="autoDetect()">
+AUTO-DETECT TILES
+</button>
+
+<button onclick="addBox()">
+ADD TILE BOX
+</button>
+
+<button onclick="saveBoard()">
+SAVE BOARD
+</button>
+
+</div>
+
+<div id="boardWrap">
+<img id="boardImg">
+</div>
+
+<div id="editor" style="margin-top:12px"></div>
+
+</section>
+
+
+<section id="solve" class="panel hidden">
+
+<h2>Solver</h2>
+
+<div class="row">
+
+<button class="primary" onclick="solve()">
+CALCULATE NEXT MOVE
+</button>
+
+<button onclick="undoLast()">
+UNDO LAST INFERRED MOVE
+</button>
+
+</div>
+
+<div id="move" class="warn">
+UPLOAD A BOARD TO BEGIN
+</div>
+
+<h2 style="margin-top:16px">
+7-Slot Storage
+</h2>
+
+<div id="storage" class="storage"></div>
+
+<div id="boardState"></div>
+
+</section>
+
+</main>
+
+
 <script>
 
-/* =========================================================
-   ARCANE PUZZLE SOLVER
-   Single-file browser version
-   ========================================================= */
+const KEY='arcane_solver_v4';
 
-/* ---------------------------------------------------------
-   CONSTANTS
-   --------------------------------------------------------- */
+let S=JSON.parse(localStorage.getItem(KEY)||'null')||{
 
-const STORAGE_KEY = "arcane_solver_memory_v4";
-const HISTORY_KEY = "arcane_solver_history_v4";
+library:{},
 
-const MAX_MEMORY = 100;
-const MAX_HISTORY = 40;
+session:{
+storage:[],
+history:[],
+boards:[],
+lastMove:null
+},
 
-const TILE_MIN_AREA = 700;
-const TILE_MAX_AREA = 120000;
+currentBoard:null
 
-const MATCH_THRESHOLD = 0.76;
-const STRONG_MATCH = 0.88;
-
-const TRAY_SLOTS = 7;
+};
 
 
-/* ---------------------------------------------------------
-   DOM
-   --------------------------------------------------------- */
-
-const fileInput = document.getElementById("fileInput");
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-
-const action = document.getElementById("action");
-const statusBox = document.getElementById("status");
-
-const tileCountBox = document.getElementById("tileCount");
-const knownCountBox = document.getElementById("knownCount");
-const memoryCountBox = document.getElementById("memoryCount");
-
-const learnPanel = document.getElementById("learnPanel");
-const tileName = document.getElementById("tileName");
-
-const saveTile = document.getElementById("saveTile");
-const skipTile = document.getElementById("skipTile");
-
-const resetMemory = document.getElementById("resetMemory");
-const clearHistory = document.getElementById("clearHistory");
+const $=id=>document.getElementById(id);
 
 
-/* ---------------------------------------------------------
-   APPLICATION STATE
-   --------------------------------------------------------- */
+function persist(){
 
-let memory = loadMemory();
-let history = loadHistory();
-
-let currentBoard = [];
-let currentImage = null;
-
-let pendingLearnTile = null;
-let selectedMove = null;
-
-
-/* ---------------------------------------------------------
-   STORAGE
-   --------------------------------------------------------- */
-
-function loadMemory(){
-
-    try{
-
-        const raw = localStorage.getItem(STORAGE_KEY);
-
-        if(!raw){
-            return [];
-        }
-
-        const data = JSON.parse(raw);
-
-        if(!Array.isArray(data)){
-            return [];
-        }
-
-        return data.slice(0,MAX_MEMORY);
-
-    }catch(e){
-
-        console.warn("Memory load failed",e);
-        return [];
-
-    }
-}
-
-
-function saveMemory(){
-
-    try{
-
-        localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify(memory.slice(0,MAX_MEMORY))
-        );
-
-    }catch(e){
-
-        console.warn("Memory save failed",e);
-
-    }
-
-    updateStats();
-}
-
-
-function loadHistory(){
-
-    try{
-
-        const raw = localStorage.getItem(HISTORY_KEY);
-
-        if(!raw){
-            return [];
-        }
-
-        const data = JSON.parse(raw);
-
-        return Array.isArray(data)
-            ? data.slice(-MAX_HISTORY)
-            : [];
-
-    }catch(e){
-
-        return [];
-
-    }
-}
-
-
-function saveHistory(){
-
-    try{
-
-        localStorage.setItem(
-            HISTORY_KEY,
-            JSON.stringify(history.slice(-MAX_HISTORY))
-        );
-
-    }catch(e){
-
-        console.warn("History save failed",e);
-
-    }
-}
-
-
-/* ---------------------------------------------------------
-   BASIC UTILITIES
-   --------------------------------------------------------- */
-
-function clamp(v,min,max){
-
-    return Math.max(min,Math.min(max,v));
+localStorage.setItem(KEY,JSON.stringify(S));
 
 }
 
 
-function distance(a,b){
+function show(id){
 
-    const dx = a.x-b.x;
-    const dy = a.y-b.y;
+['library','board','solve'].forEach(x=>{
 
-    return Math.sqrt(dx*dx+dy*dy);
+$(x).classList.toggle(
+'hidden',
+x!==id
+);
 
-}
+});
 
-
-function area(r){
-
-    return Math.max(0,r.w)*Math.max(0,r.h);
-
-}
-
-
-function center(r){
-
-    return {
-        x:r.x+r.w/2,
-        y:r.y+r.h/2
-    };
+render();
 
 }
 
 
-function average(values){
+function newGame(){
 
-    if(!values.length){
-        return 0;
-    }
+S.session={
+storage:[],
+history:[],
+boards:[],
+lastMove:null
+};
 
-    return values.reduce((a,b)=>a+b,0)/values.length;
+S.currentBoard=null;
+
+persist();
+
+render();
+
+show('board');
 
 }
 
 
-/* ---------------------------------------------------------
-   IMAGE LOADING
-   --------------------------------------------------------- */
+function resetLibrary(){
 
-fileInput.addEventListener("change",function(){
+if(confirm('Delete all saved tile types?')){
 
-    const file = this.files && this.files[0];
+S.library={};
 
-    if(!file){
-        return;
-    }
+persist();
 
-    const reader = new FileReader();
+render();
 
-    reader.onload = function(){
+}
 
-        const img = new Image();
+}
 
-        img.onload = function(){
 
-            currentImage = img;
+function esc(s){
 
-            analyzeImage(img);
+return String(s).replace(
+/[&<>"]/g,
+m=>({
+'&':'&amp;',
+'<':'&lt;',
+'>':'&gt;',
+'"':'&quot;'
+}[m])
+);
 
-        };
+}
 
-        img.src = reader.result;
 
-    };
+function escq(s){
 
-    reader.readAsDataURL(file);
+return String(s)
+.replace(/\\/g,'\\\\')
+.replace(/'/g,"\\'");
+
+}
+
+
+/* =========================
+   TILE FEATURE EXTRACTION
+========================= */
+
+function imgToFeature(file,cb){
+
+const im=new Image();
+
+const c=document.createElement('canvas');
+
+const x=c.getContext('2d');
+
+im.onload=()=>{
+
+const n=48;
+
+c.width=n;
+
+c.height=n;
+
+x.drawImage(
+im,
+0,
+0,
+n,
+n
+);
+
+const d=x.getImageData(
+0,
+0,
+n,
+n
+).data;
+
+const v=[];
+
+for(let i=0;i<d.length;i+=4){
+
+v.push(
+(
+.299*d[i]+
+.587*d[i+1]+
+.114*d[i+2]
+)/255
+);
+
+}
+
+cb({
+
+v,
+
+mean:v.reduce(
+(p,q)=>p+q,
+0
+)/v.length
+
+});
+
+};
+
+im.src=URL.createObjectURL(file);
+
+}
+
+
+/* =========================
+   SIMILARITY
+========================= */
+
+function sim(a,b){
+
+let ma=a.mean;
+
+let mb=b.mean;
+
+let num=0;
+
+let da=0;
+
+let db=0;
+
+for(
+let i=0;
+i<a.v.length;
+i++
+){
+
+let x=a.v[i]-ma;
+
+let y=b.v[i]-mb;
+
+num+=x*y;
+
+da+=x*x;
+
+db+=y*y;
+
+}
+
+return num/
+Math.sqrt(
+(da||1)*(db||1)
+);
+
+}
+
+
+/* =========================
+   SAVE TILE
+========================= */
+
+function saveTile(){
+
+const name=$('tileName')
+.value
+.trim();
+
+if(!name){
+
+alert('Enter a tile name.');
+
+return;
+
+}
+
+const entry=
+S.library[name]||
+{
+selectable:[],
+covered:[]
+};
+
+
+const add=(files,type)=>{
+
+[...files].forEach(f=>{
+
+imgToFeature(
+f,
+z=>{
+
+entry[type].push(z);
+
+S.library[name]=entry;
+
+persist();
+
+render();
+
+}
+);
+
+});
+
+};
+
+
+add(
+$('selFiles').files,
+'selectable'
+);
+
+add(
+$('covFiles').files,
+'covered'
+);
+
+
+$('tileName').value='';
+
+$('selFiles').value='';
+
+$('covFiles').value='';
+
+}
+
+
+/* =========================
+   TILE LIBRARY DISPLAY
+========================= */
+
+function renderLibrary(){
+
+const e=
+Object.entries(S.library);
+
+$('libList').innerHTML=
+
+e.length?
+
+e.map(
+([n,t])=>
+
+`<div class="card">
+
+<b>${esc(n)}</b>
+
+<div class="small muted">
+
+${t.selectable.length}
+selectable ·
+
+${t.covered.length}
+covered
+
+</div>
+
+<button
+style="margin-top:7px"
+onclick="addExample('${escq(n)}')">
+
+ADD EXAMPLES
+
+</button>
+
+</div>`
+
+).join('')
+
+:
+
+'<div class="muted">No tiles saved yet.</div>';
+
+}
+
+
+function addExample(n){
+
+$('tileName').value=n;
+
+show('library');
+
+}
+
+
+/* =========================
+   BOARD IMAGE
+========================= */
+
+$('boardFile').onchange=e=>{
+
+const f=e.target.files[0];
+
+if(!f)return;
+
+const r=new FileReader();
+
+r.onload=()=>{
+
+$('boardImg').src=r.result;
+
+S.currentBoard={
+
+image:r.result,
+
+tiles:[]
+
+};
+
+persist();
+
+$('editor').innerHTML='';
+
+};
+
+r.readAsDataURL(f);
+
+};
+
+
+/* =========================
+   MANUAL BOX
+========================= */
+
+function addBox(
+x=.05,
+y=.05,
+w=.18,
+h=.18
+){
+
+if(!S.currentBoard){
+
+alert(
+'Upload a board screenshot first.'
+);
+
+return;
+
+}
+
+S.currentBoard.tiles.push({
+
+id:'t'+Date.now()+Math.random(),
+
+x,
+
+y,
+
+w,
+
+h,
+
+state:'selectable',
+
+name:'',
+
+confidence:0,
+
+manualState:true
+
+});
+
+renderBoard();
+
+}
+
+
+/* =========================
+   AUTO DETECTION
+========================= */
+
+function autoDetect(){
+
+if(!$('boardImg').naturalWidth){
+
+alert(
+'Upload a screenshot first.'
+);
+
+return;
+
+}
+
+const img=$('boardImg');
+
+const c=document.createElement('canvas');
+
+const x=c.getContext('2d');
+
+const scale=Math.min(
+1,
+1100/img.naturalWidth
+);
+
+const W=Math.round(
+img.naturalWidth*scale
+);
+
+const H=Math.round(
+img.naturalHeight*scale
+);
+
+c.width=W;
+
+c.height=H;
+
+x.drawImage(
+img,
+0,
+0,
+W,
+H
+);
+
+const d=x.getImageData(
+0,
+0,
+W,
+H
+);
+
+const p=d.data;
+
+const mask=
+new Uint8Array(W*H);
+
+const seen=
+new Uint8Array(W*H);
+
+
+for(
+let y=0;
+y<H;
+y++
+){
+
+for(
+let xx=0;
+xx<W;
+xx++
+){
+
+let i=
+(y*W+xx)*4;
+
+let r=p[i];
+
+let g=p[i+1];
+
+let b=p[i+2];
+
+let v=(r+g+b)/3;
+
+mask[y*W+xx]=
+(
+v>145&&
+Math.max(r,g,b)-
+Math.min(r,g,b)<75
+)?
+1:0;
+
+}
+
+}
+
+
+const boxes=[];
+
+
+for(
+let yy=0;
+yy<H;
+yy++
+){
+
+for(
+let xx=0;
+xx<W;
+xx++
+){
+
+let k=
+yy*W+xx;
+
+if(
+!mask[k]||
+seen[k]
+)continue;
+
+
+let q=[k];
+
+let minx=xx;
+
+let maxx=xx;
+
+let miny=yy;
+
+let maxy=yy;
+
+let count=0;
+
+seen[k]=1;
+
+
+while(q.length){
+
+let z=q.pop();
+
+let cy=
+Math.floor(z/W);
+
+let cx=
+z-cy*W;
+
+count++;
+
+minx=Math.min(
+minx,
+cx
+);
+
+maxx=Math.max(
+maxx,
+cx
+);
+
+miny=Math.min(
+miny,
+cy
+);
+
+maxy=Math.max(
+maxy,
+cy
+);
+
+
+for(
+const n of
+[z-1,z+1,z-W,z+W]
+){
+
+if(
+n>=0&&
+n<W*H&&
+!seen[n]&&
+mask[n]
+){
+
+let nx=n%W;
+
+if(
+Math.abs(nx-cx)<=1
+){
+
+seen[n]=1;
+
+q.push(n);
+
+}
+
+}
+
+}
+
+}
+
+
+let bw=
+maxx-minx+1;
+
+let bh=
+maxy-miny+1;
+
+
+if(
+count>250&&
+bw>30&&
+bh>30&&
+bw<.55*W&&
+bh<.55*H
+){
+
+boxes.push({
+
+x:minx/W,
+
+y:miny/H,
+
+w:bw/W,
+
+h:bh/H
+
+});
+
+}
+
+}
+
+}
+
+
+if(boxes.length<2){
+
+alert(
+'Auto-detection found too few tiles. Use ADD TILE BOX and draw them manually.'
+);
+
+return;
+
+}
+
+
+S.currentBoard.tiles=
+boxes.map(
+(b,i)=>({
+
+id:'a'+i,
+
+...b,
+
+state:'selectable',
+
+name:'',
+
+confidence:0,
+
+manualState:false
+
+})
+);
+
+
+renderBoard();
+
+}
+
+
+/* =========================
+   FEATURE FROM BOARD
+========================= */
+
+function featureFromCrop(
+img,
+x,
+y,
+w,
+h
+){
+
+const c=
+document.createElement('canvas');
+
+const ctx=
+c.getContext('2d');
+
+const n=48;
+
+c.width=n;
+
+c.height=n;
+
+ctx.drawImage(
+img,
+x,
+y,
+w,
+h,
+0,
+0,
+n,
+n
+);
+
+const d=
+ctx.getImageData(
+0,
+0,
+n,
+n
+).data;
+
+const v=[];
+
+for(
+let i=0;
+i<d.length;
+i+=4
+){
+
+v.push(
+(
+.299*d[i]+
+.587*d[i+1]+
+.114*d[i+2]
+)/255
+);
+
+}
+
+return{
+
+v,
+
+mean:v.reduce(
+(a,b)=>a+b,
+0
+)/v.length
+
+};
+
+}
+
+
+/* =========================
+   RECOGNITION
+========================= */
+
+function recognize(t){
+
+const img=$('boardImg');
+
+const W=img.naturalWidth;
+
+const H=img.naturalHeight;
+
+const f=
+featureFromCrop(
+img,
+t.x*W,
+t.y*H,
+t.w*W,
+t.h*H
+);
+
+let best={
+name:'',
+score:-1
+};
+
+
+for(
+const[name,p]
+of Object.entries(S.library)
+){
+
+for(
+const q of
+[
+...p.selectable,
+...p.covered
+]
+){
+
+let s=sim(f,q);
+
+if(
+s>best.score
+){
+
+best={
+name,
+score:s
+};
+
+}
+
+}
+
+}
+
+
+return best.score>.45?
+best:
+{
+name:'',
+score:best.score
+};
+
+}
+
+
+/* =========================
+   BOARD RENDER
+========================= */
+
+function renderBoard(){
+
+const wrap=
+$('boardWrap');
+
+wrap
+.querySelectorAll('.box')
+.forEach(
+x=>x.remove()
+);
+
+
+S.currentBoard.tiles
+.forEach(
+(t,i)=>{
+
+const d=
+document.createElement('div');
+
+d.className=
+'box '+
+(
+t.state==='covered'
+?
+'covered'
+:
+t.name
+?
+''
+:
+'unknown'
+);
+
+
+d.style.left=
+t.x*100+'%';
+
+d.style.top=
+t.y*100+'%';
+
+d.style.width=
+t.w*100+'%';
+
+d.style.height=
+t.h*100+'%';
+
+
+d.innerHTML=
+
+`<span>#${i+1}</span>
+<button
+onclick="event.stopPropagation();delTile(${i})">
+×
+</button>`;
+
+
+let sx,sy,ox,oy;
+
+
+d.onpointerdown=e=>{
+
+if(
+e.target.tagName==='BUTTON'
+)return;
+
+d.setPointerCapture(
+e.pointerId
+);
+
+sx=e.clientX;
+
+sy=e.clientY;
+
+ox=t.x;
+
+oy=t.y;
+
+
+d.onpointermove=z=>{
+
+let r=
+wrap.getBoundingClientRect();
+
+t.x=Math.max(
+0,
+Math.min(
+1-t.w,
+ox+
+(z.clientX-sx)/
+r.width
+)
+);
+
+t.y=Math.max(
+0,
+Math.min(
+1-t.h,
+oy+
+(z.clientY-sy)/
+r.height
+)
+);
+
+
+d.style.left=
+t.x*100+'%';
+
+d.style.top=
+t.y*100+'%';
+
+};
+
+
+d.onpointerup=()=>{
+
+d.onpointermove=null;
+
+renderEditor();
+
+};
+
+};
+
+
+wrap.appendChild(d);
+
+});
+
+renderEditor();
+
+}
+
+
+function delTile(i){
+
+S.currentBoard.tiles
+.splice(i,1);
+
+renderBoard();
+
+}
+
+
+/* =========================
+   EDITOR
+========================= */
+
+function renderEditor(){
+
+if(!S.currentBoard)return;
+
+
+$('editor').innerHTML=
+
+'<table>'+
+'<tr>'+
+'<th>#</th>'+
+'<th>Artwork</th>'+
+'<th>State</th>'+
+'<th>Recognition</th>'+
+'</tr>'+
+
+S.currentBoard.tiles
+.map(
+(t,i)=>{
+
+let rec=
+t.name?
+{
+name:t.name,
+score:t.confidence
+}:
+recognize(t);
+
+
+if(
+!t.name&&
+rec.name
+)t.name=rec.name;
+
+
+t.confidence=
+rec.score;
+
+
+return`
+
+<tr>
+
+<td>${i+1}</td>
+
+<td>
+
+<select
+onchange="setName(${i},this.value)">
+
+<option value="">
+Unknown
+</option>
+
+${
+Object.keys(S.library)
+.map(
+n=>
+`<option
+${n===t.name?'selected':''}>
+${esc(n)}
+</option>`
+)
+.join('')
+}
+
+</select>
+
+</td>
+
+<td>
+
+<select
+onchange="setState(${i},this.value)">
+
+<option
+value="selectable"
+${t.state==='selectable'?'selected':''}>
+SELECTABLE
+</option>
+
+<option
+value="covered"
+${t.state==='covered'?'selected':''}>
+COVERED
+</option>
+
+</select>
+
+</td>
+
+<td>
+
+${
+t.confidence>=.7
+?
+'HIGH'
+:
+t.confidence>=.55
+?
+'MEDIUM'
+:
+'LOW'
+}
+
+<span class="muted">
+${t.confidence.toFixed(2)}
+</span>
+
+</td>
+
+</tr>
+
+`;
+
+}
+)
+.join('')+
+
+'</table>';
+
+}
+
+
+function setName(i,v){
+
+S.currentBoard.tiles[i].name=v;
+
+renderBoard();
+
+}
+
+
+function setState(i,v){
+
+S.currentBoard.tiles[i].state=v;
+
+S.currentBoard.tiles[i].manualState=true;
+
+renderBoard();
+
+}
+
+
+/* =========================
+   SAVE BOARD
+========================= */
+
+function saveBoard(){
+
+if(!S.currentBoard)return;
+
+
+S.currentBoard.tiles
+.forEach(
+t=>{
+
+if(!t.name){
+
+let r=recognize(t);
+
+t.name=r.name;
+
+t.confidence=r.score;
+
+}
 
 });
 
 
-/* ---------------------------------------------------------
-   CANVAS PREPARATION
-   --------------------------------------------------------- */
+const old=
+S.session.boards[
+S.session.boards.length-1
+];
 
-function drawOriginal(img){
 
-    const maxWidth = 1000;
+if(
+old&&
+S.session.lastMove
+){
 
-    const scale =
-        img.width > maxWidth
-            ? maxWidth/img.width
-            : 1;
+const was=
+old.tiles.find(
+t=>t.id===
+S.session.lastMove.tileId
+);
 
-    canvas.width = Math.round(img.width*scale);
-    canvas.height = Math.round(img.height*scale);
+const still=
+S.currentBoard.tiles.some(
+t=>t.id===
+S.session.lastMove.tileId
+);
 
-    ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
 
-    ctx.drawImage(
-        img,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
+if(
+was&&
+!still&&
+S.session.lastMove.name
+){
+
+addStorage(
+S.session.lastMove.name
+);
+
+S.session.history.push(
+S.session.lastMove.name
+);
+
+S.session.lastMove=null;
+
+}
 
 }
 
 
-/* ---------------------------------------------------------
-   TILE DETECTION
-   --------------------------------------------------------- */
+S.session.boards.push(
+JSON.parse(
+JSON.stringify(
+S.currentBoard
+)
+)
+);
 
-function detectTiles(){
+persist();
 
-    const w = canvas.width;
-    const h = canvas.height;
+render();
 
-    const image = ctx.getImageData(
-        0,
-        0,
-        w,
-        h
-    );
-
-    const data = image.data;
-
-    /*
-       We search for bright/cream rectangular regions.
-
-       This intentionally avoids assuming a fixed phone
-       resolution.
-    */
-
-    const mask = new Uint8Array(w*h);
-
-    for(let y=0;y<h;y++){
-
-        for(let x=0;x<w;x++){
-
-            const i=(y*w+x)*4;
-
-            const r=data[i];
-            const g=data[i+1];
-            const b=data[i+2];
-
-            const brightness=(r+g+b)/3;
-
-            const max=Math.max(r,g,b);
-            const min=Math.min(r,g,b);
-
-            const saturation=max-min;
-
-            const bright =
-                brightness > 125;
-
-            const lightCard =
-                brightness > 145 &&
-                saturation < 105;
-
-            mask[y*w+x] =
-                bright || lightCard
-                    ? 1
-                    : 0;
-
-        }
-
-    }
-
-    /*
-       Connected-component detection.
-    */
-
-    const visited = new Uint8Array(w*h);
-
-    const components=[];
-
-    const dirs=[
-        [1,0],
-        [-1,0],
-        [0,1],
-        [0,-1]
-    ];
-
-    for(let sy=0;sy<h;sy++){
-
-        for(let sx=0;sx<w;sx++){
-
-            const start=sy*w+sx;
-
-            if(!mask[start] || visited[start]){
-                continue;
-            }
-
-            const queue=[start];
-
-            visited[start]=1;
-
-            let minX=sx;
-            let maxX=sx;
-            let minY=sy;
-            let maxY=sy;
-
-            let count=0;
-
-            while(queue.length){
-
-                const p=queue.pop();
-
-                const y=Math.floor(p/w);
-                const x=p-y*w;
-
-                count++;
-
-                if(x<minX)minX=x;
-                if(x>maxX)maxX=x;
-                if(y<minY)minY=y;
-                if(y>maxY)maxY=y;
-
-                for(const d of dirs){
-
-                    const nx=x+d[0];
-                    const ny=y+d[1];
-
-                    if(
-                        nx<0 ||
-                        ny<0 ||
-                        nx>=w ||
-                        ny>=h
-                    ){
-                        continue;
-                    }
-
-                    const np=ny*w+nx;
-
-                    if(
-                        mask[np] &&
-                        !visited[np]
-                    ){
-
-                        visited[np]=1;
-                        queue.push(np);
-
-                    }
-
-                }
-
-            }
-
-            const bw=maxX-minX+1;
-            const bh=maxY-minY+1;
-
-            const boxArea=bw*bh;
-
-            const fill=count/boxArea;
-
-            if(
-                boxArea>=TILE_MIN_AREA &&
-                boxArea<=TILE_MAX_AREA &&
-                bw>=35 &&
-                bh>=35 &&
-                fill>0.18
-            ){
-
-                components.push({
-                    x:minX,
-                    y:minY,
-                    w:bw,
-                    h:bh,
-                    pixels:count,
-                    fill
-                });
-
-            }
-
-        }
-
-    }
-
-    return mergeNearbyComponents(
-        components
-    );
+show('solve');
 
 }
 
 
-/* ---------------------------------------------------------
-   COMPONENT MERGING
-   --------------------------------------------------------- */
+/* =========================
+   STORAGE
+========================= */
 
-function mergeNearbyComponents(components){
+function addStorage(name){
 
-    let result=components.slice();
+if(!name)return;
 
-    let changed=true;
+S.session.storage.push(name);
 
-    while(changed){
 
-        changed=false;
+if(
+S.session.storage
+.filter(x=>x===name)
+.length>=3
+){
 
-        outer:
+S.session.storage=
+S.session.storage
+.filter(
+x=>x!==name
+);
 
-        for(let i=0;i<result.length;i++){
-
-            for(let j=i+1;j<result.length;j++){
-
-                const a=result[i];
-                const b=result[j];
-
-                const ac=center(a);
-                const bc=center(b);
-
-                const d=distance(ac,bc);
-
-                const size=Math.max(
-                    Math.min(a.w,a.h),
-                    Math.min(b.w,b.h)
-                );
-
-                if(
-                    d < size*0.35 &&
-                    overlapRatio(a,b)>0.18
-                ){
-
-                    const x=Math.min(a.x,b.x);
-                    const y=Math.min(a.y,b.y);
-
-                    const x2=Math.max(
-                        a.x+a.w,
-                        b.x+b.w
-                    );
-
-                    const y2=Math.max(
-                        a.y+a.h,
-                        b.y+b.h
-                    );
-
-                    result.splice(
-                        j,
-                        1
-                    );
-
-                    result[i]={
-                        x,
-                        y,
-                        w:x2-x,
-                        h:y2-y,
-                        pixels:a.pixels+b.pixels,
-                        fill:average([
-                            a.fill,
-                            b.fill
-                        ])
-                    };
-
-                    changed=true;
-
-                    break outer;
-
-                }
-
-            }
-
-        }
-
-    }
-
-    /*
-       Remove boxes that are almost completely inside
-       another box.
-    */
-
-    result=result.filter((r,i)=>{
-
-        for(let j=0;j<result.length;j++){
-
-            if(i===j){
-                continue;
-            }
-
-            const o=result[j];
-
-            if(
-                r.x>=o.x &&
-                r.y>=o.y &&
-                r.x+r.w<=o.x+o.w &&
-                r.y+r.h<=o.y+o.h
-            ){
-
-                if(area(o)>area(r)*1.25){
-                    return false;
-                }
-
-            }
-
-        }
-
-        return true;
-
-    });
-
-    return result;
+}
 
 }
 
 
-function overlapRatio(a,b){
+function occupancyPenalty(st){
 
-    const x1=Math.max(a.x,b.x);
-    const y1=Math.max(a.y,b.y);
+const n=st.length;
 
-    const x2=Math.min(
-        a.x+a.w,
-        b.x+b.w
-    );
-
-    const y2=Math.min(
-        a.y+a.h,
-        b.y+b.h
-    );
-
-    if(x2<=x1 || y2<=y1){
-        return 0;
-    }
-
-    const overlap=(x2-x1)*(y2-y1);
-
-    return overlap/
-        Math.min(area(a),area(b));
+return(
+n*n*3+
+(n>=6?80:0)+
+(n>=7?1000:0)
+);
 
 }
 
 
-/* ---------------------------------------------------------
-   TILE NORMALIZATION
-   --------------------------------------------------------- */
-
-function extractTileImage(box){
-
-    const pad=Math.round(
-        Math.min(box.w,box.h)*0.08
-    );
-
-    const sx=clamp(
-        Math.round(box.x+pad),
-        0,
-        canvas.width-1
-    );
-
-    const sy=clamp(
-        Math.round(box.y+pad),
-        0,
-        canvas.height-1
-    );
-
-    const sw=clamp(
-        Math.round(box.w-pad*2),
-        1,
-        canvas.width-sx
-    );
-
-    const sh=clamp(
-        Math.round(box.h-pad*2),
-        1,
-        canvas.height-sy
-    );
-
-    const source=ctx.getImageData(
-        sx,
-        sy,
-        sw,
-        sh
-    );
-
-    const size=32;
-
-    const temp=document.createElement("canvas");
-
-    temp.width=size;
-    temp.height=size;
-
-    const tctx=temp.getContext("2d");
-
-    const tempImage=
-        tctx.createImageData(
-            size,
-            size
-        );
-
-    /*
-       Nearest/simple resize into a normalized
-       grayscale fingerprint.
-    */
-
-    for(let y=0;y<size;y++){
-
-        for(let x=0;x<size;x++){
-
-            const ox=Math.floor(
-                x/size*sw
-            );
-
-            const oy=Math.floor(
-                y/size*sh
-            );
-
-            const si=
-                (oy*sw+ox)*4;
-
-            const r=source.data[si];
-            const g=source.data[si+1];
-            const b=source.data[si+2];
-
-            const gray=
-                0.299*r+
-                0.587*g+
-                0.114*b;
-
-            const di=
-                (y*size+x)*4;
-
-            tempImage.data[di]=gray;
-            tempImage.data[di+1]=gray;
-            tempImage.data[di+2]=gray;
-            tempImage.data[di+3]=255;
-
-        }
-
-    }
-
-    tctx.putImageData(
-        tempImage,
-        0,
-        0
-    );
-
-    return Array.from(
-        tempImage.data
-    );
-
-}
-
-
-/* ---------------------------------------------------------
-   FEATURE EXTRACTION
-   --------------------------------------------------------- */
-
-function featureVector(pixels){
-
-    const gray=[];
-
-    for(let i=0;i<pixels.length;i+=4){
-
-        gray.push(
-            pixels[i]
-        );
-
-    }
-
-    /*
-       Normalize brightness.
-    */
-
-    const mean=
-        gray.reduce(
-            (a,b)=>a+b,
-            0
-        )/gray.length;
-
-    let variance=0;
-
-    for(const v of gray){
-
-        const d=v-mean;
-
-        variance+=d*d;
-
-    }
-
-    const std=
-        Math.sqrt(
-            variance/gray.length
-        ) || 1;
-
-    return gray.map(
-        v=>(v-mean)/std
-    );
-
-}
-
-
-/* ---------------------------------------------------------
-   FEATURE SIMILARITY
-   --------------------------------------------------------- */
-
-function similarity(a,b){
-
-    if(
-        !a ||
-        !b ||
-        a.length!==b.length
-    ){
-        return 0;
-    }
-
-    let dot=0;
-    let aa=0;
-    let bb=0;
-
-    for(let i=0;i<a.length;i++){
-
-        dot+=a[i]*b[i];
-        aa+=a[i]*a[i];
-        bb+=b[i]*b[i];
-
-    }
-
-    if(
-        aa===0 ||
-        bb===0
-    ){
-        return 0;
-    }
-
-    const correlation=
-        dot/
-        Math.sqrt(aa*bb);
-
-    return clamp(
-        (correlation+1)/2,
-        0,
-        1
-    );
-
-}
-
-
-/* ---------------------------------------------------------
-   MEMORY RECOGNITION
-   --------------------------------------------------------- */
-
-function recognizeTile(features){
-
-    if(!memory.length){
-
-        return {
-            name:"Unknown",
-            score:0,
-            id:null
-        };
-
-    }
-
-    let best=null;
-
-    for(const item of memory){
-
-        if(!item.prototype){
-            continue;
-        }
-
-        const score=
-            similarity(
-                features,
-                item.prototype
-            );
-
-        if(
-            !best ||
-            score>best.score
-        ){
-
-            best={
-                name:item.name,
-                score,
-                id:item.id
-            };
-
-        }
-
-    }
-
-    if(
-        !best ||
-        best.score<MATCH_THRESHOLD
-    ){
-
-        return {
-            name:"Unknown",
-            score:best ? best.score : 0,
-            id:null
-        };
-
-    }
-
-    return best;
-
-}
-
-
-/* ---------------------------------------------------------
-   BOARD BUILDING
-   --------------------------------------------------------- */
-
-function buildBoard(boxes){
-
-    const board=[];
-
-    for(let i=0;i<boxes.length;i++){
-
-        const box=boxes[i];
-
-        const pixels=
-            extractTileImage(box);
-
-        const features=
-            featureVector(pixels);
-
-        const recognition=
-            recognizeTile(features);
-
-        board.push({
-
-            id:i+1,
-
-            box,
-
-            center:center(box),
-
-            features,
-
-            name:recognition.name,
-
-            score:recognition.score,
-
-            memoryId:recognition.id,
-
-            selected:false,
-
-            blocked:false
-
-        });
-
-    }
-
-    /*
-       Sort top-to-bottom then left-to-right.
-       This gives stable numbering for a screenshot.
-    */
-
-    board.sort((a,b)=>{
-
-        const dy=
-            a.center.y-b.center.y;
-
-        if(Math.abs(dy)>35){
-            return dy;
-        }
-
-        return a.center.x-b.center.x;
-
-    });
-
-    board.forEach(
-        (tile,index)=>{
-            tile.id=index+1;
-        }
-    );
-
-    return board;
-
-}
-
-
-/* ---------------------------------------------------------
-   OVERLAP / BLOCKING ESTIMATION
-   --------------------------------------------------------- */
-
-function estimateBlocking(board){
-
-    for(const tile of board){
-
-        tile.blocked=false;
-
-        for(const other of board){
-
-            if(tile===other){
-                continue;
-            }
-
-            /*
-               A tile that is substantially covered by another
-               tile is treated as potentially blocked.
-
-               Fully visible tiles remain selectable.
-            */
-
-            const overlap=
-                overlapRatio(
-                    tile.box,
-                    other.box
-                );
-
-            if(
-                overlap>0.55 &&
-                other.box.y < tile.box.y
-            ){
-
-                tile.blocked=true;
-                break;
-
-            }
-
-        }
-
-    }
-
-}
-
-
-/* ---------------------------------------------------------
-   GROUPING
-   --------------------------------------------------------- */
-
-function groupTiles(board){
-
-    const groups=new Map();
-
-    for(const tile of board){
-
-        if(tile.name==="Unknown"){
-            continue;
-        }
-
-        if(!groups.has(tile.name)){
-            groups.set(
-                tile.name,
-                []
-            );
-        }
-
-        groups.get(tile.name).push(tile);
-
-    }
-
-    return groups;
-
-}
-
-
-/* ---------------------------------------------------------
-   TRAY DETECTION
-   --------------------------------------------------------- */
-
-function detectTray(board){
-
-    /*
-       The tray is normally near the bottom of the phone
-       screenshot.
-
-       We identify tiles whose center is in the bottom
-       section and are visually separated from the main
-       board.
-
-       This is deliberately conservative.
-    */
-
-    const trayY=
-        canvas.height*0.78;
-
-    return board.filter(
-        tile =>
-            tile.center.y>=trayY
-    );
-
-}
-
-
-/* ---------------------------------------------------------
+/* =========================
    MOVE SCORING
-   --------------------------------------------------------- */
+========================= */
 
-function scoreMove(tile,board,tray){
+function scoreMove(
+board,
+idx,
+storage
+){
 
-    let score=0;
+const t=board[idx];
 
-    const sameName=
-        board.filter(
-            t =>
-                t.name!=="Unknown" &&
-                t.name===tile.name
-        );
+const name=t.name;
 
-    const traySame=
-        tray.filter(
-            t =>
-                t.name!=="Unknown" &&
-                t.name===tile.name
-        );
 
-    /*
-       Completing a visible triple is extremely valuable.
-    */
+if(
+!name||
+t.state!=='selectable'
+)return -1e9;
 
-    if(sameName.length>=3){
-        score+=1000;
-    }
 
-    /*
-       Completing a pair with one more tile.
-    */
+let ns=
+storage.slice();
 
-    if(sameName.length>=2){
-        score+=500;
-    }
 
-    /*
-       If tray already contains this artwork,
-       completing that group becomes important.
-    */
+ns.push(name);
 
-    if(traySame.length>0){
-        score+=400*traySame.length;
-    }
 
-    /*
-       Strong visual recognition gets a bonus.
-    */
+const triple=
+ns.filter(
+x=>x===name
+).length===3;
 
-    score+=tile.score*100;
 
-    /*
-       Unknown pieces are risky.
-    */
+if(triple){
 
-    if(tile.name==="Unknown"){
-        score-=250;
-    }
-
-    /*
-       Blocked pieces are risky.
-    */
-
-    if(tile.blocked){
-        score-=500;
-    }
-
-    /*
-       Prefer tiles that reveal useful information.
-    */
-
-    const below=
-        board.filter(
-            t =>
-                t!==tile &&
-                t.center.y>tile.center.y &&
-                distance(
-                    t.center,
-                    tile.center
-                )<Math.max(
-                    tile.box.w,
-                    tile.box.h
-                )*1.4
-        );
-
-    score+=
-        Math.min(
-            below.length*15,
-            60
-        );
-
-    return score;
+ns=
+ns.filter(
+x=>x!==name
+);
 
 }
 
 
-/* ---------------------------------------------------------
-   MOVE PLANNER
-   --------------------------------------------------------- */
+let score=
+triple?
+180:
+0;
 
-function chooseMove(board){
 
-    if(!board.length){
+const existing=
+storage.filter(
+x=>x===name
+).length;
 
-        return {
-            tile:null,
-            reason:"none"
-        };
 
-    }
+score+=
+75*existing;
 
-    estimateBlocking(board);
 
-    const tray=
-        detectTray(board);
+score-=
+occupancyPenalty(ns);
 
-    const playable=
-        board.filter(
-            tile=>!tile.blocked
-        );
 
-    if(!playable.length){
+/* reward moves likely to expose covered tiles */
 
-        return {
-            tile:null,
-            reason:"blocked"
-        };
+const tx=
+t.x+t.w/2;
 
-    }
+const ty=
+t.y+t.h/2;
 
-    const groups=
-        groupTiles(playable);
+let expose=0;
 
-    /*
-       FIRST PRIORITY:
-       complete a visible triple.
-    */
 
-    for(const [name,tiles] of groups){
+board.forEach(
+(u,j)=>{
 
-        if(tiles.length>=3){
+if(
+j===idx||
+u.state!=='covered'
+)return;
 
-            const choice=
-                tiles
-                .filter(
-                    t=>!t.blocked
-                )
-                .sort(
-                    (a,b)=>
-                        b.score-a.score
-                )[0];
 
-            if(choice){
+let ux=
+u.x+u.w/2;
 
-                return {
-                    tile:choice,
-                    reason:"triple"
-                };
+let uy=
+u.y+u.h/2;
 
-            }
 
-        }
+if(
+Math.abs(tx-ux)<
+(t.w+u.w)/2*.75&&
+Math.abs(ty-uy)<
+(t.h+u.h)/2*.75
+){
 
-    }
+expose++;
 
-    /*
-       SECOND PRIORITY:
-       complete something already in the tray.
-    */
+}
 
-    for(const tile of playable){
+});
 
-        if(tile.name==="Unknown"){
-            continue;
-        }
 
-        const count=
-            tray.filter(
-                t=>t.name===tile.name
-            ).length;
+score+=
+expose*22;
 
-        if(count>=1){
 
-            return {
-                tile,
-                reason:"tray-match"
-            };
+/* avoid unrelated singles */
 
-        }
+if(
+existing===0&&
+!triple
+){
 
-    }
-
-    /*
-       THIRD PRIORITY:
-       visible pair.
-    */
-
-    for(const [name,tiles] of groups){
-
-        if(tiles.length>=2){
-
-            const choice=
-                tiles
-                .filter(
-                    t=>!t.blocked
-                )
-                .sort(
-                    (a,b)=>
-                        b.score-a.score
-                )[0];
-
-            if(choice){
-
-                return {
-                    tile:choice,
-                    reason:"pair"
-                };
-
-            }
-
-        }
-
-    }
-
-    /*
-       FOURTH PRIORITY:
-       choose the strongest recognized artwork.
-    */
-
-    const ranked=
-        playable
-        .slice()
-        .sort(
-            (a,b)=>
-                scoreMove(
-                    b,
-                    playable,
-                    tray
-                )-
-                scoreMove(
-                    a,
-                    playable,
-                    tray
-                )
-        );
-
-    const best=ranked[0];
-
-    if(
-        best &&
-        best.name!=="Unknown" &&
-        best.score>=STRONG_MATCH
-    ){
-
-        return {
-            tile:best,
-            reason:"known"
-        };
-
-    }
-
-    /*
-       Do NOT blindly invent a move when recognition
-       is poor.
-
-       Ask the user to teach the unknown artwork instead.
-    */
-
-    const unknown=
-        playable
-        .filter(
-            t=>t.name==="Unknown"
-        )
-        .sort(
-            (a,b)=>
-                b.score-a.score
-        )[0];
-
-    if(unknown){
-
-        return {
-            tile:unknown,
-            reason:"unknown"
-        };
-
-    }
-
-    /*
-       Last resort:
-       choose the highest-scoring playable tile.
-    */
-
-    return {
-        tile:best,
-        reason:"fallback"
-    };
+score-=18;
 
 }
 
 
-/* ---------------------------------------------------------
-   DRAW BOARD
-   --------------------------------------------------------- */
-
-function drawBoard(board,move){
-
-    if(!currentImage){
-        return;
-    }
-
-    drawOriginal(
-        currentImage
-    );
-
-    ctx.lineWidth=4;
-
-    for(const tile of board){
-
-        const r=tile.box;
-
-        const isMove=
-            move &&
-            move.tile===tile;
-
-        const unknown=
-            tile.name==="Unknown";
-
-        /*
-           Normal tiles.
-        */
-
-        if(isMove){
-
-            ctx.strokeStyle="#00ff88";
-
-        }else if(unknown){
-
-            ctx.strokeStyle="#ffcc00";
-
-        }else{
-
-            ctx.strokeStyle="#55aaff";
-
-        }
-
-        ctx.strokeRect(
-            r.x,
-            r.y,
-            r.w,
-            r.h
-        );
-
-        /*
-           Tile number.
-        */
-
-        ctx.fillStyle=
-            isMove
-                ? "#00ff88"
-                : "#ffffff";
-
-        ctx.font=
-            "bold 22px Arial";
-
-        const label=
-            "#" + tile.id;
-
-        const tx=r.x+7;
-        const ty=r.y+27;
-
-        ctx.fillText(
-            label,
-            tx,
-            ty
-        );
-
-    }
-
-    /*
-       Large highlight for selected move.
-    */
-
-    if(move && move.tile){
-
-        const r=move.tile.box;
-
-        ctx.strokeStyle="#00ff88";
-        ctx.lineWidth=7;
-
-        ctx.strokeRect(
-            r.x-5,
-            r.y-5,
-            r.w+10,
-            r.h+10
-        );
-
-        ctx.fillStyle="#00ff88";
-
-        ctx.font=
-            "bold 24px Arial";
-
-        ctx.fillText(
-            "TAP",
-            r.x,
-            Math.max(
-                28,
-                r.y-10
-            )
-        );
-
-    }
+return score;
 
 }
 
 
-/* ---------------------------------------------------------
-   STATUS / ACTION
-   --------------------------------------------------------- */
+/* =========================
+   SOLVE
+========================= */
 
-function showMove(move,board){
+function solve(){
 
-    if(!move || !move.tile){
+if(
+!S.currentBoard||
+!S.currentBoard.tiles.length
+){
 
-        action.textContent=
-            "NO SAFE MOVE";
+$('move').textContent=
+'UPLOAD A BOARD';
 
-        action.className=
-            "action bad";
-
-        statusBox.textContent=
-            "No sufficiently reliable selectable tile was detected.";
-
-        return;
-
-    }
-
-    const tile=move.tile;
-
-    if(move.reason==="unknown"){
-
-        action.textContent=
-            "TEACH TILE #" + tile.id;
-
-        action.className=
-            "action warn";
-
-        statusBox.textContent=
-            "This artwork has not been learned yet.";
-
-        pendingLearnTile=tile;
-
-        learnPanel.style.display=
-            "block";
-
-        return;
-
-    }
-
-    learnPanel.style.display=
-        "none";
-
-    action.textContent=
-        "TAP TILE #" + tile.id;
-
-    action.className=
-        "action good";
-
-    statusBox.textContent=
-        "Move selected.";
+return;
 
 }
 
 
-/* ---------------------------------------------------------
-   LEARNING
-   --------------------------------------------------------- */
+S.currentBoard.tiles
+.forEach(
+t=>{
 
-function learnTile(tile,name){
+if(!t.name){
 
-    if(!tile || !name){
-        return;
-    }
+let r=
+recognize(t);
 
-    name=name.trim();
+t.name=r.name;
 
-    if(!name){
-        return;
-    }
-
-    /*
-       Check whether a very similar memory already exists.
-    */
-
-    let existing=null;
-
-    for(const item of memory){
-
-        if(
-            item.prototype &&
-            similarity(
-                tile.features,
-                item.prototype
-            )>0.94
-        ){
-
-            existing=item;
-            break;
-
-        }
-
-    }
-
-    if(existing){
-
-        existing.prototype=
-            tile.features;
-
-        existing.updated=
-            Date.now();
-
-    }else{
-
-        memory.push({
-
-            id:
-                "tile_" +
-                Date.now() +
-                "_" +
-                Math.random()
-                .toString(36)
-                .slice(2),
-
-            name,
-
-            prototype:
-                tile.features,
-
-            created:
-                Date.now(),
-
-            updated:
-                Date.now()
-
-        });
-
-    }
-
-    saveMemory();
-
-    pendingLearnTile=null;
-
-    learnPanel.style.display=
-        "none";
-
-    tileName.value="";
-
-    /*
-       Re-run the current board so the newly learned
-       artwork can immediately affect the move.
-    */
-
-    analyzeCurrentCanvas();
+t.confidence=
+r.score;
 
 }
 
+});
 
-/* ---------------------------------------------------------
-   HISTORY
-   --------------------------------------------------------- */
 
-function recordBoard(board,move){
+let best=-1e9;
 
-    const snapshot={
+let bi=-1;
 
-        time:Date.now(),
 
-        tiles:board.map(
-            tile=>({
+S.currentBoard.tiles
+.forEach(
+(t,i)=>{
 
-                id:tile.id,
-
-                x:Math.round(
-                    tile.center.x
-                ),
-
-                y:Math.round(
-                    tile.center.y
-                ),
-
-                name:tile.name,
-
-                score:
-                    Math.round(
-                        tile.score*100
-                    )/100
-
-            })
-        ),
-
-        recommended:
-            move &&
-            move.tile
-                ? move.tile.id
-                : null
-
-    };
-
-    history.push(
-        snapshot
-    );
-
-    if(history.length>MAX_HISTORY){
-
-        history=
-            history.slice(
-                -MAX_HISTORY
-            );
-
-    }
-
-    saveHistory();
-
-}
-
-
-/* ---------------------------------------------------------
-   POSITION HISTORY ANALYSIS
-   --------------------------------------------------------- */
-
-function compareWithPrevious(board){
-
-    if(!history.length){
-        return;
-    }
-
-    const previous=
-        history[history.length-1];
-
-    if(
-        !previous ||
-        !previous.tiles
-    ){
-        return;
-    }
-
-    /*
-       The history is intentionally used as supporting
-       information, not as an excuse to guess.
-
-       If a previous position disappears while a nearby
-       new position appears, the solver records that the
-       board changed.
-    */
-
-    for(const tile of board){
-
-        let closest=null;
-        let closestDistance=Infinity;
-
-        for(const old of previous.tiles){
-
-            const d=
-                Math.hypot(
-                    tile.center.x-old.x,
-                    tile.center.y-old.y
-                );
-
-            if(d<closestDistance){
-
-                closestDistance=d;
-                closest=old;
-
-            }
-
-        }
-
-        if(
-            closest &&
-            closestDistance<
-                Math.max(
-                    tile.box.w,
-                    tile.box.h
-                )*0.6
-        ){
-
-            /*
-               Position continuity can help stabilize
-               recognition across screenshots.
-            */
-
-            if(
-                tile.name==="Unknown" &&
-                closest.name &&
-                closest.name!=="Unknown"
-            ){
-
-                const candidate=
-                    memory.find(
-                        m =>
-                            m.name===
-                            closest.name
-                    );
-
-                if(candidate){
-
-                    const s=
-                        similarity(
-                            tile.features,
-                            candidate.prototype
-                        );
-
-                    if(s>=0.68){
-
-                        tile.name=
-                            candidate.name;
-
-                        tile.score=
-                            Math.max(
-                                tile.score,
-                                s
-                            );
-
-                        tile.memoryId=
-                            candidate.id;
-
-                    }
-
-                }
-
-            }
-
-        }
-
-    }
-
-}
-
-
-/* ---------------------------------------------------------
-   MAIN ANALYSIS
-   --------------------------------------------------------- */
-
-function analyzeImage(img){
-
-    drawOriginal(img);
-
-    statusBox.textContent=
-        "Analyzing board...";
-
-    action.textContent=
-        "SCANNING";
-
-    action.className=
-        "action";
-
-    learnPanel.style.display=
-        "none";
-
-    setTimeout(
-        analyzeCurrentCanvas,
-        30
-    );
-
-}
-
-
-function analyzeCurrentCanvas(){
-
-    if(!currentImage){
-        return;
-    }
-
-    /*
-       Restore original before detection so the image data
-       is clean.
-    */
-
-    drawOriginal(
-        currentImage
-    );
-
-    const boxes=
-        detectTiles();
-
-    if(!boxes.length){
-
-        currentBoard=[];
-
-        tileCountBox.textContent="0";
-        knownCountBox.textContent="0";
-
-        action.textContent=
-            "NO TILES DETECTED";
-
-        action.className=
-            "action bad";
-
-        statusBox.textContent=
-            "Try a full screenshot with the entire board visible.";
-
-        return;
-
-    }
-
-    currentBoard=
-        buildBoard(boxes);
-
-    compareWithPrevious(
-        currentBoard
-    );
-
-    const known=
-        currentBoard.filter(
-            t=>t.name!=="Unknown"
-        ).length;
-
-    tileCountBox.textContent=
-        currentBoard.length;
-
-    knownCountBox.textContent=
-        known;
-
-    memoryCountBox.textContent=
-        memory.length;
-
-    const move=
-        chooseMove(
-            currentBoard
-        );
-
-    selectedMove=move;
-
-    drawBoard(
-        currentBoard,
-        move
-    );
-
-    showMove(
-        move,
-        currentBoard
-    );
-
-    recordBoard(
-        currentBoard,
-        move
-    );
-
-}
-
-
-/* ---------------------------------------------------------
-   BUTTONS
-   --------------------------------------------------------- */
-
-saveTile.addEventListener(
-    "click",
-    function(){
-
-        if(!pendingLearnTile){
-            return;
-        }
-
-        learnTile(
-            pendingLearnTile,
-            tileName.value
-        );
-
-    }
+let sc=
+scoreMove(
+S.currentBoard.tiles,
+i,
+S.session.storage
 );
 
 
-skipTile.addEventListener(
-    "click",
-    function(){
+if(sc>best){
 
-        pendingLearnTile=null;
+best=sc;
 
-        learnPanel.style.display=
-            "none";
+bi=i;
 
-        /*
-           Do not invent a move after skipping.
-        */
+}
 
-        action.textContent=
-            "NO SAFE MOVE";
-
-        action.className=
-            "action bad";
-
-        statusBox.textContent=
-            "Unknown artwork was not learned.";
-
-    }
-);
+});
 
 
-tileName.addEventListener(
-    "keydown",
-    function(e){
+if(
+bi<0||
+best<-100
+){
 
-        if(e.key==="Enter"){
+$('move').textContent=
+'NO SAFE MOVE';
 
-            saveTile.click();
+$('move').className=
+'warn';
 
-        }
-
-    }
-);
-
-
-resetMemory.addEventListener(
-    "click",
-    function(){
-
-        const ok=
-            confirm(
-                "Delete all learned tile artwork?"
-            );
-
-        if(!ok){
-            return;
-        }
-
-        memory=[];
-
-        saveMemory();
-
-        if(currentImage){
-
-            analyzeCurrentCanvas();
-
-        }else{
-
-            updateStats();
-
-        }
-
-    }
-);
-
-
-clearHistory.addEventListener(
-    "click",
-    function(){
-
-        history=[];
-
-        saveHistory();
-
-        statusBox.textContent=
-            "Board history cleared.";
-
-    }
-);
-
-
-/* ---------------------------------------------------------
-   STATISTICS
-   --------------------------------------------------------- */
-
-function updateStats(){
-
-    memoryCountBox.textContent=
-        memory.length;
-
-    knownCountBox.textContent=
-        currentBoard.filter(
-            t=>t.name!=="Unknown"
-        ).length;
-
-    tileCountBox.textContent=
-        currentBoard.length;
+return;
 
 }
 
 
-/* ---------------------------------------------------------
-   BUILT-IN FIRST TILE MEMORY
-   ---------------------------------------------------------
-
-   These are intentionally NOT fake image templates.
-
-   The first screenshot teaches the solver the artwork
-   directly when the user names it.
-
-   This prevents hard-coded coordinates from being mistaken
-   for universal artwork recognition.
-   --------------------------------------------------------- */
+const t=
+S.currentBoard.tiles[bi];
 
 
-/* ---------------------------------------------------------
-   STARTUP
-   --------------------------------------------------------- */
+$('move').textContent=
+'TAP TILE #'+(bi+1);
 
-updateStats();
+$('move').className=
+'safe';
 
-statusBox.textContent=
-    "Ready. Upload a screenshot of the game board.";
+
+S.session.lastMove={
+
+boardId:
+S.session.boards.length-1,
+
+tileId:
+t.id,
+
+tileIndex:
+bi,
+
+name:
+t.name
+
+};
+
+
+persist();
+
+renderBoard();
+
+renderStorage();
+
+renderState();
+
+}
+
+
+/* =========================
+   DISPLAY STORAGE
+========================= */
+
+function renderStorage(){
+
+let s=
+S.session.storage;
+
+let out='';
+
+
+for(
+let i=0;
+i<7;
+i++
+){
+
+out+=`
+
+<div class="slot ${s[i]?'full':''}">
+
+${s[i]?esc(s[i]):'EMPTY'}
+
+</div>
+
+`;
+
+}
+
+
+$('storage').innerHTML=
+out+
+`<span class="pill">
+${s.length} / 7
+</span>`;
+
+}
+
+
+/* =========================
+   BOARD STATE
+========================= */
+
+function renderState(){
+
+let b=
+S.currentBoard?.tiles||[];
+
+
+$('boardState').innerHTML=
+b.length?
+
+`<p class="muted">
+
+${b.filter(
+t=>t.state==='selectable'
+).length}
+selectable ·
+
+${b.filter(
+t=>t.state==='covered'
+).length}
+covered ·
+
+${b.filter(
+t=>t.name
+).length}
+identified
+
+</p>`
+
+:'';
+
+}
+
+
+/* =========================
+   UNDO
+========================= */
+
+function undoLast(){
+
+if(
+S.session.history.length
+){
+
+S.session.storage.pop();
+
+S.session.history.pop();
+
+persist();
+
+renderStorage();
+
+}
+
+}
+
+
+/* =========================
+   RENDER
+========================= */
+
+function render(){
+
+renderLibrary();
+
+renderStorage();
+
+renderState();
+
+
+if(
+S.currentBoard&&
+$('boardImg').src!==
+S.currentBoard.image
+){
+
+$('boardImg').src=
+S.currentBoard.image;
+
+}
+
+
+if(
+S.currentBoard&&
+$('boardImg').complete
+){
+
+renderBoard();
+
+}
+
+}
+
+
+show('library');
 
 </script>
 
